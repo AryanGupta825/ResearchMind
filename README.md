@@ -1,72 +1,167 @@
 # ResearchMind · Multi-Agent AI Research System
 
-A four-agent AI research pipeline with a beautiful web UI inspired by enterprise design systems.
+> **Live Demo → [https://researchmind-q888.onrender.com](https://researchmind-q888.onrender.com)**
 
-## Agents
+ResearchMind is a multi-agent AI research pipeline that takes any topic as input and automatically searches the web, scrapes deep content, writes a structured report, and critiques it — all in real time through a modern web interface.
 
-| # | Agent | Role |
-|---|-------|------|
-| 01 | **Search Agent** | Finds recent information via Tavily API |
-| 02 | **Reader Agent** | Scrapes & extracts deep content from top URLs |
-| 03 | **Writer Chain** | Drafts a structured research report |
-| 04 | **Critic Chain** | Reviews and scores the report (X/10) |
+---
 
-## Stack
+## What It Does
 
-- **Backend**: Flask (Python) with Server-Sent Events for real-time updates
-- **Frontend**: Pure HTML/CSS/JS — no framework required
-- **AI**: LangChain + GPT-4o-mini
-- **Search**: Tavily API
-- **Scraping**: BeautifulSoup
+You type a research topic. Four specialized AI agents then work in sequence:
 
-## Setup
+1. **Search Agent** — queries the web and retrieves the most recent, relevant results on your topic
+2. **Reader Agent** — picks the best URL from the search results and scrapes the full page content for deeper context
+3. **Writer Chain** — combines everything gathered and writes a detailed, structured research report with Introduction, Key Findings, Conclusion, and Sources
+4. **Critic Chain** — independently reviews the report and gives it a quality score out of 10, along with strengths and areas to improve
 
-### 1. Clone & install
+Every step updates live in the browser as it completes. At the end you get a full report you can read on screen or download as a `.md` file.
 
-```bash
-pip install -r requirements.txt
+---
+
+## Tech Stack
+
+### Backend
+
+| Technology | Role |
+|---|---|
+| **Python** | Core language |
+| **Flask** | Web framework — serves the UI and exposes REST + SSE endpoints |
+| **Server-Sent Events (SSE)** | Streams real-time pipeline progress to the browser without polling |
+| **Threading** | Runs the 4-agent pipeline in a background thread so the server stays responsive |
+| **python-dotenv** | Loads API keys from `.env` file securely |
+
+### AI & Agents
+
+| Technology | Role |
+|---|---|
+| **LangChain** | Agent orchestration framework — builds and runs the agent pipeline |
+| **LangChain-Groq** | LangChain integration for the Groq API |
+| **Groq API** | Fast LLM inference — runs `llama-3.3-70b-versatile` |
+| **`llama-3.3-70b-versatile`** | The LLM powering all four agents and chains |
+| **`create_react_agent`** | LangChain utility that builds ReAct-pattern agents for Search and Reader |
+| **LCEL (LangChain Expression Language)** | Pipe syntax (`prompt \| llm \| StrOutputParser()`) used to build Writer and Critic chains |
+| **ChatPromptTemplate** | Structures system + human prompts for Writer and Critic |
+| **StrOutputParser** | Parses raw LLM output to clean strings |
+
+### Tools (inside agents)
+
+| Tool | Library | Role |
+|---|---|---|
+| `web_search` | **Tavily API** (`tavily-python`) | Searches the live web and returns titles, URLs, and snippets |
+| `scrape_url` | **BeautifulSoup4** + **Requests** | Fetches a URL, strips scripts/styles/nav, returns clean readable text |
+
+### Frontend
+
+| Technology | Role |
+|---|---|
+| **HTML5** | Semantic page structure |
+| **CSS3** | Full custom design system — no CSS framework used |
+| **Vanilla JavaScript** | SSE client, DOM updates, Markdown renderer, download handler |
+| **Google Fonts** | Playfair Display (display), Space Grotesk (UI), DM Mono (mono labels) |
+| **Server-Sent Events API** | Browser-side `EventSource` listens to the Flask SSE stream for live updates |
+
+---
+
+## Agent Architecture
+
+```
+User Input (topic)
+       │
+       ▼
+┌─────────────────┐
+│  Search Agent   │  ← ReAct agent + web_search tool (Tavily)
+│  (LangChain)    │
+└────────┬────────┘
+         │ search results
+         ▼
+┌─────────────────┐
+│  Reader Agent   │  ← ReAct agent + scrape_url tool (BeautifulSoup)
+│  (LangChain)    │
+└────────┬────────┘
+         │ scraped content
+         ▼
+┌─────────────────┐
+│  Writer Chain   │  ← LCEL: prompt | llm | StrOutputParser
+│  (LangChain)    │
+└────────┬────────┘
+         │ research report
+         ▼
+┌─────────────────┐
+│  Critic Chain   │  ← LCEL: prompt | llm | StrOutputParser
+│  (LangChain)    │
+└────────┬────────┘
+         │ score + feedback
+         ▼
+    Final Output
 ```
 
-### 2. Configure environment
-
-```bash
-cp .env.example .env
-# Edit .env and add your API keys
-```
-
-Required keys:
-- `OPENAI_API_KEY` — from [platform.openai.com](https://platform.openai.com)
-- `TAVILY_API_KEY` — from [tavily.com](https://tavily.com)
-
-### 3. Run
-
-```bash
-python app.py
-```
-
-Open [http://localhost:5000](http://localhost:5000) in your browser.
+---
 
 ## Project Structure
 
 ```
 ResearchMind/
-├── app.py              # Flask backend with SSE streaming
-├── agents.py           # Search agent, Reader agent, Writer & Critic chains
-├── tools.py            # web_search (Tavily) + scrape_url (BeautifulSoup)
-├── pipeline.py         # CLI pipeline runner
-├── requirements.txt
-├── .env.example
+├── app.py                  # Flask app — REST API + SSE streaming endpoint
+├── agents.py               # All 4 agents: Search, Reader, Writer, Critic
+├── tools.py                # web_search (Tavily) + scrape_url (BeautifulSoup)
+├── pipeline.py             # CLI runner for the full pipeline
+├── requirements.txt        # Python dependencies
+├── .env.example            # Environment variable template
+├── render.yaml             # Render.com deployment config
 ├── templates/
-│   └── index.html      # Main UI
+│   └── index.html          # Single-page UI
 └── static/
-    ├── style.css        # Cohere-inspired design system
-    └── app.js           # SSE client & UI controller
+    ├── style.css           # Cohere-inspired design system (pure CSS)
+    └── app.js              # SSE client + UI controller (vanilla JS)
 ```
 
-## Features
+---
 
-- ⚡ **Real-time pipeline** — watch each agent complete live via SSE
-- 📝 **Structured reports** — Introduction, Key Findings, Conclusion, Sources
-- 🧐 **Critic scoring** — quality score (X/10) with strengths & improvement areas
-- ⬇️ **Download** — export report as `.md` file
-- 🎨 **Enterprise UI** — Cohere-inspired design with dark header, clean typography
+## APIs Used
+
+| API | Purpose | Free Tier |
+|---|---|---|
+| [Groq](https://console.groq.com) | LLM inference (llama-3.3-70b-versatile) | Yes — generous free tier |
+| [Tavily](https://app.tavily.com) | Real-time web search | Yes — 1000 searches/month free |
+
+---
+
+## Design
+
+The UI is inspired by enterprise AI design systems — built entirely with custom CSS, no UI framework. Key design choices:
+
+- **Deep green hero band** (`#003c33`) for the header section
+- **Near-black nav & footer** (`#17171c`) for a controlled, professional feel
+- **Coral accents** (`#ff7759`) for highlights and example chips
+- **Playfair Display** for display headings — editorial and distinctive
+- **Space Grotesk** for UI text — clean and modern
+- **DM Mono** for labels, tags, and code — technical precision
+- **Real-time step cards** that animate through Waiting → Running → Done states live as the pipeline executes
+
+---
+
+## Key Features
+
+- **Live pipeline updates** — watch each agent complete in real time via SSE, no page refresh
+- **Structured reports** — every report follows Introduction → Key Findings → Conclusion → Sources
+- **Critic scoring** — independent quality review with score, strengths, and improvement areas
+- **Markdown rendering** — report renders with proper headings, lists, links, and code blocks
+- **Download** — export the final report as a `.md` file
+- **Example topics** — one-click chips to try the system instantly
+
+---
+
+## Live Demo
+
+**[https://researchmind-q888.onrender.com](https://researchmind-q888.onrender.com)**
+
+Try topics like:
+- `LLM agents 2025`
+- `CRISPR gene editing`
+- `Fusion energy progress`
+- `Autonomous vehicles 2025`
+
+---
+
+*Built with LangChain · Groq · Tavily · Flask · Deployed on Render*
