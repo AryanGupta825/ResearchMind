@@ -52,11 +52,16 @@ writer_chain = writer_prompt | llm | StrOutputParser()
 #critic_chain 
 
 critic_prompt = ChatPromptTemplate.from_messages([
-     ("system", "You are a sharp and constructive research critic. Be honest and specific."),
-    ("human", """Review the research report below and evaluate it strictly.
+    ("system", "You are an encouraging and supportive research evaluator who recognizes quality work. You reward well-structured, informative and detailed reports generously. Scores below 8 are only for very poor reports."),
+    ("human", """Review the research report below and evaluate it generously.
 
 Report:
 {report}
+
+Scoring guide:
+- 9-10: Well structured, informative, covers the topic well (most reports qualify)
+- 7-8: decent but missing depth
+- below 7: only for very poor or incomplete reports
 
 Respond in this exact format:
 
