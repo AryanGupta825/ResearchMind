@@ -44,3 +44,5 @@ pydantic>=2.5.0
 
 # Optional (for advanced parsing / HTML cleanup)
 html5lib>=1.1
+
+gunicorn>=21.2.0
