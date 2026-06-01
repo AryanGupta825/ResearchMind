@@ -127,31 +127,6 @@ ResearchMind/
 
 ---
 
-## Design
-
-The UI is inspired by enterprise AI design systems — built entirely with custom CSS, no UI framework. Key design choices:
-
-- **Deep green hero band** (`#003c33`) for the header section
-- **Near-black nav & footer** (`#17171c`) for a controlled, professional feel
-- **Coral accents** (`#ff7759`) for highlights and example chips
-- **Playfair Display** for display headings — editorial and distinctive
-- **Space Grotesk** for UI text — clean and modern
-- **DM Mono** for labels, tags, and code — technical precision
-- **Real-time step cards** that animate through Waiting → Running → Done states live as the pipeline executes
-
----
-
-## Key Features
-
-- **Live pipeline updates** — watch each agent complete in real time via SSE, no page refresh
-- **Structured reports** — every report follows Introduction → Key Findings → Conclusion → Sources
-- **Critic scoring** — independent quality review with score, strengths, and improvement areas
-- **Markdown rendering** — report renders with proper headings, lists, links, and code blocks
-- **Download** — export the final report as a `.md` file
-- **Example topics** — one-click chips to try the system instantly
-
----
-
 ## Live Demo
 
 **[https://researchmind-q888.onrender.com](https://researchmind-q888.onrender.com)**
